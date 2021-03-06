@@ -26,6 +26,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using Mono.Options;
 
 namespace Microsoft.VisualStudio.AutoTest.Repl
@@ -72,8 +73,10 @@ namespace Microsoft.VisualStudio.AutoTest.Repl
 				options.Help = true;
 			}
 
-			if (string.IsNullOrEmpty(options.FileName)) {
+			if (string.IsNullOrEmpty (options.FileName)) {
 				options.Error = new ApplicationException ("--file argument is required");
+			} else if (!options.ResolveFileName ()) {
+				options.Error = new ApplicationException ("Could not find VisualStudio.exe");
 			}
 
 			return options;
@@ -94,6 +97,16 @@ namespace Microsoft.VisualStudio.AutoTest.Repl
 
 			OptionSet optionsSet = GetOptionSet ();
 			optionsSet.WriteOptionDescriptions (Console.Out);
+		}
+
+		bool ResolveFileName ()
+		{
+			FileName = Path.GetFullPath (FileName);
+			if (FileName.EndsWith (".app")) {
+				FileName = Path.Combine (FileName, "Contents", "Resources", "lib" ,"monodevelop", "bin" , "VisualStudio.exe");
+			}
+
+			return File.Exists (FileName);
 		}
 	}
 }
